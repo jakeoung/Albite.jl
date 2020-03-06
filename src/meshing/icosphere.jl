@@ -12,16 +12,18 @@ function refine_sphere!(vv, r=1.0)
 end
 
 "Generate icosphere with subdivision1: 80 faces, subd2: 320 ..."
-function icosphere(subdivision=3)
+function icosphere(subdiv=3, r=1.0, center=[0.0,0.0,0.0])
     vv, ff = icosahedron()
 
-    for i=1:subdivision
+    for i=1:subdiv
         v_, f_ = subdivision(vv', ff')
         ff = Array(f_')
         vv = Array(v_')
         vv = refine_sphere!(vv)
     end
 
+    vv .*= r
+    vv .-= reshape(center, 1, 3)
     return vv, ff
 end
 
