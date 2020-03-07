@@ -1,5 +1,4 @@
 using GeometryTypes
-export icosphere
 using LinearAlgebra
 
 "refine sphere for vertices [N x 3]"
