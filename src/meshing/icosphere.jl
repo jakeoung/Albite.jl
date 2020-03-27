@@ -22,7 +22,7 @@ function icosphere(subdiv=3, r=1.0, center=[0.0,0.0,0.0])
     end
 
     vv .*= r
-    vv .+= reshape(center, 1, 3)
+    vv .+= reshape(center, 1, 3) # note that +
     return vv, ff
 end
 
