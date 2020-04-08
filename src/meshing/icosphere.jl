@@ -1,5 +1,5 @@
-using GeometryTypes
-using LinearAlgebra
+# using GeometryTypes
+# using LinearAlgebra
 
 "refine sphere for vertices [N x 3]"
 function refine_sphere!(vv, r=1.0)

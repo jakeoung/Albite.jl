@@ -1,10 +1,3 @@
-"""
-For better understanding ray tracing methods
-"""
-
-# module raycasting
-export ray_triangle_intersect, ray_bbox_intersect, cast_ray
-using LinearAlgebra
 
 """
     function ray_triangle_intersect(src, ray, v1, v2, v3) 
@@ -15,40 +8,44 @@ Möller, T., Trumbore, B., 1997. Fast, minimum storage ray-triangle intersection
 
 See also https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
 """
-function ray_triangle_intersect(src, ray, v1, v2, v3)
+function ray_triangle_intersect(src, ray, v1, v2, v3, allow_negative=false, culling=false)
 
     v12 = v2 - v1
     v13 = v3 - v1
     pvec = cross(ray, v13)
     det = dot(v12, pvec)
 
-    if abs(det) < 1e-8 # note that for back-facing culling, we omit abs
-        return false, -1.0
+    culling && det < 0.0 && return Inf
+
+    if abs(det) < eps(Float32) # parallel case
+        # println("parallel")
+        return Inf
     end
 
     inv_det = 1.0 / det
     tvec = src - v1
     u = dot(tvec, pvec) * inv_det
     if u < 0 || u > 1
-        return false, -1.0
+        return Inf
     end
 
     q = cross(tvec, v12)
     v = dot(ray, q) * inv_det
     if v < 0 || (u+v) > 1
-        return false, -1.0
+        return Inf
     end
 
     t = dot(v13, q) * inv_det
-    if t < 0.0
-        return false, -1.0
+    if allow_negative == false && t < 0.0
+        return Inf
     end
-    return true, t
+    return t
 end
 
-function ray_bbox_intersect(src, ray, bb_min, bb_max)
+"check if a ray intersects with bbox. return (true/false, t)"
+function ray_bbox_intersect(src, ray, bb_min, bb_widths)
     # bb_min = bbox.origin
-    # bb_max = bbox.origin + bbox.widths
+    bb_max = bb_min + bb_widths
     invray = 1.0 ./ (ray .+ eps())
     if ray[1] < 0
         tmin = (bb_max[1] - src[1]) * invray[1]
@@ -67,7 +64,7 @@ function ray_bbox_intersect(src, ray, bb_min, bb_max)
     end
 
     if tmin > tymax || tymin > tmax
-        return false
+        return Inf
     end
     if tymin > tmin
         tmin = tymin
@@ -85,65 +82,8 @@ function ray_bbox_intersect(src, ray, bb_min, bb_max)
     end
 
     if tmin > tzmax || tzmin > tmax
-        return false
+        return Inf
     end
- 
-    return true; 
+
+    return tmin
 end
-
-function cast_ray(src, ray, vertices, faces_list::Array{Any,1})
-    t_near = 1e8
-
-    for faces in faces_list
-        for f in faces
-            v1 = vertices[f[1]]
-            v2 = vertices[f[2]]
-            v3 = vertices[f[3]]
-
-            
-            is_hit, t = ray_triangle_intersect(src, ray, v1, v2, v3)
-
-            # println(is_hit, t)
-            if is_hit == true && t < t_near
-                t_near = t
-                # println(src, ray, v1, v2, v3)
-
-            end
-        end
-    end
-    if t_near < 1e8-2*eps()
-        return true, t_near
-    else
-        return false, -1.0
-    end
-
-end
-
-function cast_ray(src, ray, vertices, faces)
-    
-    t_near = 1e8
-
-    for f in faces
-        v1 = vertices[f[1]]
-        v2 = vertices[f[2]]
-        v3 = vertices[f[3]]
-
-        
-        is_hit, t = ray_triangle_intersect(src, ray, v1, v2, v3)
-
-        # println(is_hit, t)
-        if is_hit == true && t < t_near
-            t_near = t
-            println(src, ray, v1, v2, v3)
-
-        end
-    end
-
-    if t_near < 1e8-2*eps()
-        return true, t_near
-    else
-        return false, -1.0
-    end
-end
-
-# end

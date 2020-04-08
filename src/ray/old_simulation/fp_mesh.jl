@@ -1,8 +1,7 @@
 # using .raycasting
 
-include("./util_octtree_old.jl")
-
 using LinearAlgebra
+using DDG
 
 EPS = 1e-6
 
@@ -90,6 +89,8 @@ function fp_mesh(proj_geom, root, vv, ff)
     
     nangles = size(Vectors, 1)
     sinogram = zeros(nangles, H, W)
+
+    Grid()
     
     for idx=1:nangles
         fp_parallel_mesh_one_angle!(sinogram, idx, root, Vectors, H, W, vv, ff)
