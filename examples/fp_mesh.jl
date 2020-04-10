@@ -28,7 +28,7 @@ function fp_parallel_mesh_one_angle!(sinogram, idx, grid, Vectors, H, W, vv, ff)
             
             # first test bounding box
             # @show src_pos, ray_dir
-            t = cast_ray(grid, src_pos, ray_dir)
+            t, iface = cast_ray(grid, src_pos, ray_dir)
             if t == Inf
                 continue
             end
@@ -45,7 +45,7 @@ function fp_parallel_mesh_one_angle!(sinogram, idx, grid, Vectors, H, W, vv, ff)
                 end
 
                 new_src = loc1 + (EPS)*ray_dir
-                t = cast_ray(grid, new_src, ray_dir)
+                t, iface = cast_ray(grid, new_src, ray_dir)
                 
                 if t == Inf
                     # println("! Something wrong, cnt: $cnt")
@@ -56,7 +56,7 @@ function fp_parallel_mesh_one_angle!(sinogram, idx, grid, Vectors, H, W, vv, ff)
                     sinogram[idx, v+1, u+1] += norm(loc1-loc2)
                     new_src = loc2 + (EPS)*ray_dir
 
-                    t = cast_ray(grid, new_src, ray_dir)
+                    t, iface = cast_ray(grid, new_src, ray_dir)
                     t == Inf && break
                     loc1 = new_src + t*ray_dir
                 end

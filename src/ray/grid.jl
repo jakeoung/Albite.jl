@@ -14,13 +14,13 @@ function insert!(c::Cell, fidx::Int)
     push!(c.flist, fidx)
 end
 
-function intersect(cell::Cell, orig, ray, vv, faces, thit)
+function intersect(cell::Cell, orig, ray, vv, faces, thit, culling=false)
     # tmin = Inf
     iface = -1
     for fid in cell.flist
         # todo: mailbox
         v1, v2, v3 = vv[faces[fid]]
-        t = ray_triangle_intersect(orig, ray, v1, v2, v3)
+        t = ray_triangle_intersect(orig, ray, v1, v2, v3, culling)
         if (t < thit)
             # nearest triangle found
             thit = t
@@ -52,13 +52,17 @@ end
 # Return
 - 
 """
-function cast_ray(grid::Grid, orig, ray)
-    thitbox = ray_bbox_intersect(orig, ray, grid.bbox.origin, grid.bbox.widths)
+function cast_ray(grid::Grid, orig, ray; culling=false)
+
+    invdir = 1.0 ./ (ray .+ (eps(Float32) .* sign.(ray)) )
+    thitbox = ray_bbox_intersect(orig, invdir, grid.bbox.origin, grid.bbox.widths)
+    
+    iface = 0 # not hit
     if thitbox == Inf
-        return Inf
+        return Inf, iface
     end
 
-    invdir = 1.0 ./ (ray .+ eps(Float32) )
+    # invdir = 1.0 ./ (ray .+ eps(Float32) )
 
     # convert orig in cell coordinates (we start from inside the grid thitbox)
     orig_cell = (orig + thitbox*ray) - grid.bbox.origin
@@ -75,9 +79,9 @@ function cast_ray(grid::Grid, orig, ray)
             step[i] = 1
             exit[i] = grid.resolution[i]
             deltaT[i] *= -1.0
-            nextCrossingT[i] = thitbox + (cell[i] * grid.cell_size[i] - orig_cell[i]) * invdir[i]
+            nextCrossingT[i] = thitbox + ( (cell[i]+1.0) * grid.cell_size[i] - orig_cell[i]) * invdir[i]
         else
-            nextCrossingT[i] = thitbox + ((cell[i]+1.0) * grid.cell_size[i] - orig_cell[i]) * invdir[i]
+            nextCrossingT[i] = thitbox + (cell[i] * grid.cell_size[i] - orig_cell[i]) * invdir[i]
         end
     end
 
@@ -89,7 +93,8 @@ function cast_ray(grid::Grid, orig, ray)
     while true
         idx_cell = cell[3]*grid.resolution[1]*grid.resolution[2] + cell[2]*grid.resolution[1] + cell[1] + 1
         if isassigned(grid.cells, idx_cell)
-            ishit, thit, iface = intersect(grid.cells[idx_cell], orig, ray, grid.vv, grid.ff, thit)
+            ishit, thit, iface_ = intersect(grid.cells[idx_cell], orig, ray, grid.vv, grid.ff, thit, culling)
+            (iface_ > 0) && (iface = iface_)
         end
 
         k = ((nextCrossingT[1] < nextCrossingT[2]) << 2) +
@@ -106,7 +111,7 @@ function cast_ray(grid::Grid, orig, ray)
         nextCrossingT[axis] += deltaT[axis]
     end
 
-    return thit
+    return thit, iface
 end
 
 """

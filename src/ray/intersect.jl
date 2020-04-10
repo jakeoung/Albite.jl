@@ -8,7 +8,7 @@ Möller, T., Trumbore, B., 1997. Fast, minimum storage ray-triangle intersection
 
 See also https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/moller-trumbore-ray-triangle-intersection
 """
-function ray_triangle_intersect(src, ray, v1, v2, v3, allow_negative=false, culling=false)
+function ray_triangle_intersect(src, ray, v1, v2, v3, culling=false; allow_negative=false)
 
     v12 = v2 - v1
     v13 = v3 - v1
@@ -43,11 +43,12 @@ function ray_triangle_intersect(src, ray, v1, v2, v3, allow_negative=false, cull
 end
 
 "check if a ray intersects with bbox. return (true/false, t)"
-function ray_bbox_intersect(src, ray, bb_min, bb_widths)
+function ray_bbox_intersect(src, invray, bb_min, bb_widths)
     # bb_min = bbox.origin
     bb_max = bb_min + bb_widths
-    invray = 1.0 ./ (ray .+ eps())
-    if ray[1] < 0
+    # invray = 1.0 ./ (ray .+ (eps(Float32) .* sign.(ray)) )
+    
+    if invray[1] < 0.0
         tmin = (bb_max[1] - src[1]) * invray[1]
         tmax = (bb_min[1] - src[1]) * invray[1]
     else
@@ -55,7 +56,7 @@ function ray_bbox_intersect(src, ray, bb_min, bb_widths)
         tmax = (bb_max[1] - src[1]) * invray[1]
     end
 
-    if ray[2] < 0
+    if invray[2] < 0.0
         tymin = (bb_max[2] - src[2]) * invray[2]
         tymax = (bb_min[2] - src[2]) * invray[2]
     else
@@ -63,7 +64,7 @@ function ray_bbox_intersect(src, ray, bb_min, bb_widths)
         tymax = (bb_max[2] - src[2]) * invray[2]
     end
 
-    if tmin > tymax || tymin > tmax
+    if ( (tmin > tymax) || (tymin > tmax))
         return Inf
     end
     if tymin > tmin
@@ -73,7 +74,7 @@ function ray_bbox_intersect(src, ray, bb_min, bb_widths)
         tmax = tymax
     end
     
-    if ray[3] < 0
+    if invray[3] < 0
         tzmin = (bb_max[3] - src[3]) * invray[3]
         tzmax = (bb_min[3] - src[3]) * invray[3]
     else
@@ -81,8 +82,14 @@ function ray_bbox_intersect(src, ray, bb_min, bb_widths)
         tzmax = (bb_max[3] - src[3]) * invray[3]
     end
 
-    if tmin > tzmax || tzmin > tmax
+    if (tmin > tzmax) || (tzmin > tmax)
         return Inf
+    end
+    if tzmin > tmin
+        tmin = tzmin
+    end
+    if tzmax < tmax
+        tmax = tzmax
     end
 
     return tmin
