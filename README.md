@@ -1,4 +1,4 @@
-Welcome to DDG.jl
+Welcome to Albite.jl
 
 ## Install
 
@@ -6,7 +6,7 @@ Install [Julia](https://julialang.org/downloads/) and in [Julia REPL](https://do
 
 ```
 julia> ]
-pkg> add https://github.com/jakeoung/DDG.jl
+pkg> add https://github.com/jakeoung/Albite.jl
 ```
 
 ## Examples

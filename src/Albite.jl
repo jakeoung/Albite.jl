@@ -1,7 +1,7 @@
 using GeometryTypes
 using LinearAlgebra
 
-module DDG
+module Albite
 
 include("meshing/subdivision.jl")
 include("meshing/icosphere.jl")
