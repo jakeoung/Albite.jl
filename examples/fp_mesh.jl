@@ -1,38 +1,45 @@
 using LinearAlgebra
 using DDG
-EPS = 5e-5
+EPS = 5e-6
 
-function fp_parallel_mesh_one_angle!(sinogram, idx, grid, Vectors, H, W, vv, ff)
-
+function fp_parallel_mesh_one_angle!(sinogram, grid, vector, H, W, vv, ff)
+    global ray_dir, src_center
     # global src_pos, ray_dir, faces_candidate
     MAX_DIST_ORIGIN = 10.0
 
-    src_center = Vectors[idx, 1:3] * MAX_DIST_ORIGIN
-    det_center = Vectors[idx, 4:6]
+    src_center = vector[1:3] * MAX_DIST_ORIGIN
+    det_center = vector[4:6]
     
-    detU = Vectors[idx, 7:9]
-    detV = Vectors[idx, 10:12]
+    detU = vector[7:9]
+    detV = vector[10:12]
     
     detS = det_center - 0.5 * H * detV - 0.5 * W * detU
     srcS = src_center - 0.5 * H * detV - 0.5 * W * detU
     
-    ray_dir_ = -src_center
-    ray_dir = ray_dir_ ./ norm(ray_dir_)    
+    ray_dir = -src_center
+    ray_dir[abs.(ray_dir) .<= eps(Float32)] .= eps()
+
+    # ray_dir = ray_dir_ ./ norm(ray_dir_)    
+
+    
+    # ray_dir[2] = eps()
+    
+    # ray_dir[1] = eps()
+    # ray_dir[3] = eps()
 
     cnt_bbox_mis = 0
 
-    for v=0:H-1
-        for u=0:W-1
-            det_pos = detS + v * detV + u * detU
+    for u=0:W-1
+        for v=0:H-1
+            # det_pos = detS + v * detV + u * detU
             src_pos = srcS + v * detV + u * detU
             
             # first test bounding box
-            # @show src_pos, ray_dir
             t, iface = cast_ray(grid, src_pos, ray_dir)
             if t == Inf
                 continue
             end
-
+            
             loc1 = src_pos + (t)*ray_dir
 
             cnt = 0
@@ -53,11 +60,10 @@ function fp_parallel_mesh_one_angle!(sinogram, idx, grid, Vectors, H, W, vv, ff)
                     break
                 else
                     loc2 = new_src + t*ray_dir
-                    sinogram[idx, v+1, u+1] += norm(loc1-loc2)
+                    sinogram[v+1, u+1] += norm(loc1-loc2)
                     new_src = loc2 + (EPS)*ray_dir
 
                     t, iface = cast_ray(grid, new_src, ray_dir)
-                    t == Inf && break
                     loc1 = new_src + t*ray_dir
                 end
             end
@@ -75,14 +81,16 @@ function fp_mesh(proj_geom, vv, ff)
     W = proj_geom.DetectorColCount
     
     nangles = size(Vectors, 1)
-    sinogram = zeros(nangles, H, W)
+    sinogram = zeros(H, W, nangles)
     
     grid = Grid(vv, ff)
 
     for idx=1:nangles
-        fp_parallel_mesh_one_angle!(sinogram, idx, grid, Vectors, H, W, vv, ff)
+        sino_view = view(sinogram, :, :, idx)
+        vec_view = view(Vectors, idx, :)
+        fp_parallel_mesh_one_angle!(sino_view, grid, vec_view, H, W, vv, ff)
     end
-    return sinogram
+    return permutedims(sinogram, [3,1,2])
 end
 
 

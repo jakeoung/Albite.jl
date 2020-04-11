@@ -48,20 +48,20 @@ function ray_bbox_intersect(src, invray, bb_min, bb_widths)
     bb_max = bb_min + bb_widths
     # invray = 1.0 ./ (ray .+ (eps(Float32) .* sign.(ray)) )
     
-    if invray[1] < 0.0
-        tmin = (bb_max[1] - src[1]) * invray[1]
-        tmax = (bb_min[1] - src[1]) * invray[1]
-    else
+    if invray[1] >= 0.0
         tmin = (bb_min[1] - src[1]) * invray[1]
         tmax = (bb_max[1] - src[1]) * invray[1]
+    else
+        tmin = (bb_max[1] - src[1]) * invray[1]
+        tmax = (bb_min[1] - src[1]) * invray[1]
     end
 
-    if invray[2] < 0.0
-        tymin = (bb_max[2] - src[2]) * invray[2]
-        tymax = (bb_min[2] - src[2]) * invray[2]
-    else
+    if invray[2] >= 0.0
         tymin = (bb_min[2] - src[2]) * invray[2]
         tymax = (bb_max[2] - src[2]) * invray[2]
+    else
+        tymin = (bb_max[2] - src[2]) * invray[2]
+        tymax = (bb_min[2] - src[2]) * invray[2]
     end
 
     if ( (tmin > tymax) || (tymin > tmax))
@@ -74,12 +74,12 @@ function ray_bbox_intersect(src, invray, bb_min, bb_widths)
         tmax = tymax
     end
     
-    if invray[3] < 0
-        tzmin = (bb_max[3] - src[3]) * invray[3]
-        tzmax = (bb_min[3] - src[3]) * invray[3]
-    else
+    if invray[3] >= 0.0
         tzmin = (bb_min[3] - src[3]) * invray[3]
         tzmax = (bb_max[3] - src[3]) * invray[3]
+    else
+        tzmin = (bb_max[3] - src[3]) * invray[3]
+        tzmax = (bb_min[3] - src[3]) * invray[3]
     end
 
     if (tmin > tzmax) || (tzmin > tmax)
@@ -88,9 +88,9 @@ function ray_bbox_intersect(src, invray, bb_min, bb_widths)
     if tzmin > tmin
         tmin = tzmin
     end
-    if tzmax < tmax
-        tmax = tzmax
-    end
+    # if tzmax < tmax
+    #     tmax = tzmax
+    # end
 
     return tmin
 end

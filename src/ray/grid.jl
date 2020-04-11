@@ -5,9 +5,6 @@ using GeometryTypes
 
 struct Cell
     flist::Array{Int, 1}
-    # triangles::Array{Triangle}
-
-    # Cell(fidx::Int) = Cell( [fidx] )
 end
 
 function insert!(c::Cell, fidx::Int)
@@ -48,13 +45,18 @@ end
 
 """
     cast_ray(grid::Grid, orig, ray)
-    
+  
+There can be an issue when ray[i] ~= 0.0
+
 # Return
 - 
 """
 function cast_ray(grid::Grid, orig, ray; culling=false)
+    # invdir = 1.0 ./ (ray .+ 10.0 * (eps(Float32) .* sign.(ray)) )
+    invdir = 1.0 ./ (ray .+ eps())
+    # invdir[abs.(ray) .<= eps(Float32)] .= sign.(ray) .* 1e15
+    
 
-    invdir = 1.0 ./ (ray .+ (eps(Float32) .* sign.(ray)) )
     thitbox = ray_bbox_intersect(orig, invdir, grid.bbox.origin, grid.bbox.widths)
     
     iface = 0 # not hit
@@ -66,7 +68,8 @@ function cast_ray(grid::Grid, orig, ray; culling=false)
 
     # convert orig in cell coordinates (we start from inside the grid thitbox)
     orig_cell = (orig + thitbox*ray) - grid.bbox.origin
-    cell = clamp.( Int.(floor.(orig_cell ./ grid.cell_size)), 0, grid.resolution .- 1)
+    # @show ray, invdir
+    cell = Int.(clamp.( floor.(orig_cell ./ grid.cell_size), 0, grid.resolution .- 1))
     cell = Array(cell)
 
     deltaT = - [grid.cell_size...] .* invdir
