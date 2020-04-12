@@ -1,5 +1,28 @@
 using GeometryTypes
 
+function _conv_kern_direct!(out, u, v)
+    fill!(out, 0)
+    u_region = CartesianIndices(u)
+    v_region = CartesianIndices(v)
+    one_index = oneunit(first(u_region))
+    for vindex in v_region
+        @simd for uindex in u_region
+            @inbounds out[uindex + vindex - one_index] += u[uindex] * v[vindex]
+        end
+    end
+    out
+end
+
+"""
+sa = (1000, 1000, 3); sb = (3, 3, 3); a = rand(sa...); b = rand(sb...);
+"""
+function _conv_kern_direct(
+    u::AbstractArray{T, N}, v::AbstractArray{S, N}, su, sv) where {T, S, N}
+    sout = su .+ sv .- 1
+    out = similar(u, promote_type(T, S), sout)
+    _conv_kern_direct!(out, u, v)
+end
+
 function _add_face!(vv, ff, vert_set, location, v_cnt)
     
     face = [0, 1, 2, 3] .+ v_cnt
@@ -36,14 +59,20 @@ Convert voxel grid to quad mesh
 ```
 voxel = zeros(220,220,220)
 voxel[20:150,20:150,20:150] .= 1.0
-vv, ff = voxel2quad(voxel, 0.5)
+vv, ff = voxel2quad(voxel, 0.5, true)
 ff = quad2trimesh(ff)
 # write_obj_quadmesh("1.obj", vv, ff)
 # mm = GLNormalMesh(vv, ff)
 # Makie.mesh(mm)
 ```
 """
-function voxel2quad(voxel, thresh=0.5, do_normalize=true)
+function voxel2quad(voxel, thresh=0.5, subsample=false, do_normalize=true)
+    if subsample
+        K = ones(3,3,3) / 9.0
+        voxel_ = _conv_kern_direct(voxel, K, size(voxel), size(K))
+        voxel = voxel_[2:end-1, 2:end-1, 2:end-1]
+    end
+
     voxel_bit_ = voxel .>= thresh
     voxel_bit = zeros(Bool, size(voxel_bit_) .+ 2 )
     voxel_bit[2:end-1, 2:end-1, 2:end-1] .= voxel_bit_
@@ -57,10 +86,8 @@ function voxel2quad(voxel, thresh=0.5, do_normalize=true)
     vert_sets = (top_verts, bottom_verts, left_verts,
                  right_verts, front_verts, back_verts)
 
-    
     v_cnt = 1
     cartesian_idxs = findall(voxel_bit .== 1)
-    @show length(cartesian_idxs)
 
     vv = Point3{Int32}[]
     ff = Face{4,Int32}[]
