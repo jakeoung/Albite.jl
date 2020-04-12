@@ -33,8 +33,8 @@ Convert voxel grid to quad mesh
 
 # Examples
 ```
-voxel = zeros(50,50,50)
-voxel[20:40,20:40,20:40] .= 1.0
+voxel = zeros(220,220,220)
+voxel[20:150,20:150,20:150] .= 1.0
 vv, ff = voxel2quad(voxel, 0.5)
 vv = Array{Point{3, Float64}}(vv)
 ff = Array{Face{4, Int}}(ff)
@@ -58,13 +58,19 @@ function voxel2quad(voxel, thresh=0.5, normalize=false)
     vert_sets = [top_verts, bottom_verts, left_verts,
                  right_verts, front_verts, back_verts]
 
-    vv = []
-    ff = []
+    
     v_cnt = 1
     cartesian_idxs = findall(voxel_bit .== 1)
+    @show length(cartesian_idxs)
 
-    for idx in cartesian_idxs
+    vv = Point3{Int32}[]
+    ff = Face{4,Int32}[]
+    sizehint!(vv, length(cartesian_idxs)*300)
+    sizehint!(ff, length(cartesian_idxs)*300)
+
+    for (cnt,idx) in enumerate(cartesian_idxs)
         i, j, k = idx.I
+        #cnt % 10000 == 0 && println("$cnt")
         
         voxel_bit[i,j,k+1] != 1 && (v_cnt = _add_face!(vv, ff, vert_sets[1], idx.I, v_cnt))
         voxel_bit[i,j,k-1] != 1 && (v_cnt = _add_face!(vv, ff, vert_sets[2], idx.I, v_cnt))
