@@ -16,6 +16,7 @@ export Grid, cast_ray
 
 include("ray/scene.jl")
 export Camera, Light
+
 include("ray/render.jl")
 export render, fill_bg!
 

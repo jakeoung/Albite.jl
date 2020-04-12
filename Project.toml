@@ -1,6 +1,6 @@
-name = "DDG"
+name = "Albite"
 uuid = "0d8945ae-3c78-4d89-9fb2-eb311a132810"
-repo = "https://github.com/jakeoung/DDG.jl"
+repo = "https://github.com/jakeoung/Albite.jl"
 version = "0.1.0"
 
 [deps]
