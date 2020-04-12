@@ -43,7 +43,7 @@ ff = quad2trimesh(ff)
 # Makie.mesh(mm)
 ```
 """
-function voxel2quad(voxel, thresh=0.5, normalize=true)
+function voxel2quad(voxel, thresh=0.5, do_normalize=true)
     voxel_bit_ = voxel .>= thresh
     voxel_bit = zeros(Bool, size(voxel_bit_) .+ 2 )
     voxel_bit[2:end-1, 2:end-1, 2:end-1] .= voxel_bit_
@@ -81,7 +81,7 @@ function voxel2quad(voxel, thresh=0.5, normalize=true)
 
     vv = Array{Point{3, Float64}}(vv)
     
-    if normalize
+    if do_normalize
         vv = normalize(vv) .* 2.0
         vv .-= 1.0
     end
