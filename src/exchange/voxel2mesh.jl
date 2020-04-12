@@ -43,7 +43,7 @@ ff = quad2trimesh(ff)
 # Makie.mesh(mm)
 ```
 """
-function voxel2quad(voxel, thresh=0.5, normalize=false)
+function voxel2quad(voxel, thresh=0.5, normalize=true)
     voxel_bit_ = voxel .>= thresh
     voxel_bit = zeros(Bool, size(voxel_bit_) .+ 2 )
     voxel_bit[2:end-1, 2:end-1, 2:end-1] .= voxel_bit_
