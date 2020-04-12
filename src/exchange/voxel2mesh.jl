@@ -5,11 +5,11 @@ function _add_face!(vv, ff, vert_set, location, v_cnt)
     face = [0, 1, 2, 3] .+ v_cnt
     update = 4
 
-    for (e, vs) in enumerate(vert_set)
+    @inbounds for (e, vs) in enumerate(vert_set)
         new_position = vs .+ location
         
-        index = findfirst(x -> x == new_position, vv)
-        if ~isnothing(index)
+        if in(new_position, vv)
+            index = findfirst(x -> x == new_position, vv)
             face[e] = index
             
             # decrement other vert indicies
@@ -49,14 +49,14 @@ function voxel2quad(voxel, thresh=0.5, normalize=false)
     voxel_bit = zeros(Bool, size(voxel_bit_) .+ 2 )
     voxel_bit[2:end-1, 2:end-1, 2:end-1] .= voxel_bit_
     
-    top_verts = [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]]
-    bottom_verts = [[0, 0, 0], [0, 1, 0], [1, 1, 0], [1, 0, 0]]
-    left_verts = [[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0]]
-    right_verts = [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]]
-    front_verts = [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]]
-    back_verts = [[0, 1, 0], [0, 1, 1], [1, 1, 1], [1, 1, 0]]
-    vert_sets = [top_verts, bottom_verts, left_verts,
-                 right_verts, front_verts, back_verts]
+    top_verts = ((0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1))
+    bottom_verts = ((0, 0, 0), (0, 1, 0), (1, 1, 0), (1, 0, 0))
+    left_verts = ((0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 1, 0))
+    right_verts = ((1, 0, 0), (1, 1, 0), (1, 1, 1), (1, 0, 1))
+    front_verts = ((0, 0, 0), (1, 0, 0), (1, 0, 1), (0, 0, 1))
+    back_verts = ((0, 1, 0), (0, 1, 1), (1, 1, 1), (1, 1, 0))
+    vert_sets = (top_verts, bottom_verts, left_verts,
+                 right_verts, front_verts, back_verts)
 
     
     v_cnt = 1
@@ -68,7 +68,7 @@ function voxel2quad(voxel, thresh=0.5, normalize=false)
     sizehint!(vv, length(cartesian_idxs)*300)
     sizehint!(ff, length(cartesian_idxs)*300)
 
-    for (cnt,idx) in enumerate(cartesian_idxs)
+    @inbounds for (cnt,idx) in enumerate(cartesian_idxs)
         i, j, k = idx.I
         #cnt % 10000 == 0 && println("$cnt")
         
