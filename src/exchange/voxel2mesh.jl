@@ -1,5 +1,4 @@
 using GeometryTypes
-include("./obj.jl")
 
 function _add_face!(vv, ff, vert_set, location, v_cnt)
     
