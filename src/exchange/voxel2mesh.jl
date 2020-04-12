@@ -8,6 +8,7 @@ function _add_face!(vv, ff, vert_set, location, v_cnt)
     @inbounds for (e, vs) in enumerate(vert_set)
         new_position = vs .+ location
         
+        # in is much faster than findfirst
         if in(new_position, vv)
             index = findfirst(x -> x == new_position, vv)
             face[e] = index
@@ -36,8 +37,6 @@ Convert voxel grid to quad mesh
 voxel = zeros(220,220,220)
 voxel[20:150,20:150,20:150] .= 1.0
 vv, ff = voxel2quad(voxel, 0.5)
-vv = Array{Point{3, Float64}}(vv)
-ff = Array{Face{4, Int}}(ff)
 ff = quad2trimesh(ff)
 # write_obj_quadmesh("1.obj", vv, ff)
 # mm = GLNormalMesh(vv, ff)
@@ -80,9 +79,12 @@ function voxel2quad(voxel, thresh=0.5, normalize=false)
         voxel_bit[i,j+1,k] != 1 && (v_cnt = _add_face!(vv, ff, vert_sets[6], idx.I, v_cnt))
     end
 
-    # if normalize
-    #     vv = (vv .- maximum(vv)) ./ (maximum(vv) - minimum(vv))
-    # end
+    vv = Array{Point{3, Float64}}(vv)
+    
+    if normalize
+        vv = normalize(vv) .* 2.0
+        vv .-= 1.0
+    end
     return vv, ff
 end
 
