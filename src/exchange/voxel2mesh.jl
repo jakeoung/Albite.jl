@@ -68,9 +68,10 @@ ff = quad2trimesh(ff)
 """
 function voxel2quad(voxel, thresh=0.5, subsample=false, do_normalize=true)
     if subsample
-        K = ones(3,3,3) / 9.0
+        K = ones(3,3,3) ./ 9.0
         voxel_ = _conv_kern_direct(voxel, K, size(voxel), size(K))
-        voxel = voxel_[2:end-1, 2:end-1, 2:end-1]
+        voxel = voxel_[2:2:end-1, 2:2:end-1, 2:2:end-1]
+        println("subsampled")
     end
 
     voxel_bit_ = voxel .>= thresh
