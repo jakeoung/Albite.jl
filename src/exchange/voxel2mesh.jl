@@ -65,7 +65,6 @@ function voxel2quad(voxel, thresh=0.5, normalize=false)
 
     for idx in cartesian_idxs
         i, j, k = idx.I
-        @show i,j,k, voxel_bit[i,j,k+1]
         
         voxel_bit[i,j,k+1] != 1 && (v_cnt = _add_face!(vv, ff, vert_sets[1], idx.I, v_cnt))
         voxel_bit[i,j,k-1] != 1 && (v_cnt = _add_face!(vv, ff, vert_sets[2], idx.I, v_cnt))
