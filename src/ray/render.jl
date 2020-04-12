@@ -1,7 +1,7 @@
 using LinearAlgebra
 
 # include("./camera_light.jl")
-using .CameraLight
+using .Scene
 
 function get_barycentric(p, v1, v2, v3)
     area = norm(cross(v3-v1, v3-v2))

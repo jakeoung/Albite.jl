@@ -7,13 +7,14 @@ include("meshing/subdivision.jl")
 include("meshing/icosphere.jl")
 export icosphere
 
-include("IO/obj.jl")
-export write_obj
+include("exchange/obj.jl")
+include("exchange/voxel2mesh.jl")
+export write_obj, voxel2quad, quad2trimesh
 
 include("ray/grid.jl")
 export Grid, cast_ray
 
-include("ray/camera_light.jl")
+include("ray/scene.jl")
 export Camera, Light
 include("ray/render.jl")
 export render, fill_bg!

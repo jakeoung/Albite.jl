@@ -1,4 +1,4 @@
-module CameraLight
+module Scene
 using LinearAlgebra
 using GeometryTypes
 

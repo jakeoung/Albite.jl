@@ -1,4 +1,4 @@
-Welcome to Albite.jl
+# Welcome to Albite.jl
 
 ## Install
 

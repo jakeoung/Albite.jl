@@ -1,6 +1,6 @@
 using GeometryTypes
 
-function write_obj(fname::String, vv::Array, ff::Array)
+function write_obj(fname::String, vv, ff)
    io = open(fname, "w")
 
    if length(size(vv)) == 2
@@ -12,6 +12,20 @@ function write_obj(fname::String, vv::Array, ff::Array)
    end
    close(io)
 end
+
+function write_obj_quadmesh(fname::String, vv, ff)
+   io = open(fname, "w")
+
+   if length(size(vv)) == 2
+       mapslices(v -> println(io, "v $(v[1]) $(v[2]) $(v[3])"), vv, dims=[2])
+       mapslices(f -> println(io, "f $(f[1]) $(f[2]) $(f[3]) $(f[4])"), ff, dims=[2])
+   else
+       map(v -> println(io, "v $(v[1]) $(v[2]) $(v[3])"), vv)
+       map(f -> println(io, "f $(f[1]) $(f[2]) $(f[3]) $(f[4])"), ff)    
+   end
+   close(io)
+end
+
 
 # read obj file with the support of multiple materials
 # partiall ported from https://github.com/ericjang/WavefrontOBJs.jl/blob/master/src/obj.jl
