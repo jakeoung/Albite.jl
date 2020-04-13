@@ -17,10 +17,10 @@ end
 sa = (1000, 1000, 3); sb = (3, 3, 3); a = rand(sa...); b = rand(sb...);
 """
 function _conv_kern_direct(
-    u::AbstractArray{T, N}, v::AbstractArray{S, N}, su, sv) where {T, S, N}
+    u::AbstractArray{T, N}, v::AbstractArray{S, N}, su, sv, stride=1) where {T, S, N}
     sout = su .+ sv .- 1
     out = similar(u, promote_type(T, S), sout)
-    _conv_kern_direct!(out, u, v)
+    _conv_kern_direct!(out, u, v, stride=1)
 end
 
 function _add_face!(vv, ff, vert_set, location, v_cnt)
@@ -71,7 +71,7 @@ function voxel2quad(voxel, thresh=0.5, subsample=false, do_normalize=true)
         K = ones(3,3,3) ./ 9.0
         voxel_ = _conv_kern_direct(voxel, K, size(voxel), size(K))
         voxel = voxel_[2:2:end-1, 2:2:end-1, 2:2:end-1]
-        println("subsampled")
+        println("subsampled.", size(voxel))
     end
 
     voxel_bit_ = voxel .>= thresh
@@ -110,7 +110,8 @@ function voxel2quad(voxel, thresh=0.5, subsample=false, do_normalize=true)
     vv = Array{Point{3, Float64}}(vv)
     
     if do_normalize
-        vv = normalize(vv) .* 2.0
+        denom = (maximum(vv) - minimum(vv))
+        vv = map(v -> (v .- minimum(v)) / denom, vv) .* 2.0
         vv .-= 1.0
     end
     return vv, ff
