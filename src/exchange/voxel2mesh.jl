@@ -20,7 +20,7 @@ function _conv_kern_direct(
     u::AbstractArray{T, N}, v::AbstractArray{S, N}, su, sv, stride=1) where {T, S, N}
     sout = su .+ sv .- 1
     out = similar(u, promote_type(T, S), sout)
-    _conv_kern_direct!(out, u, v, stride=1)
+    _conv_kern_direct!(out, u, v)
 end
 
 function _add_face!(vv, ff, vert_set, location, v_cnt)
